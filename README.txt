@@ -8,7 +8,7 @@ Taigi Reader｜咱來學臺灣台語・互動教材
 本專案非教育部官方軟體，不表示教育部背書。
 
 建置：安裝 Node.js 24、pnpm 11.25.0，進入 TaigiReader 後執行 pnpm install --frozen-lockfile 與 pnpm build:web。
-本機 Web：pnpm start:web，開啟 http://127.0.0.1:4317。
+
 Windows 離線版：從 Releases 下載 ZIP，解壓縮後保留整個資料夾，執行其中 EXE。
 GitHub Pages 從 gh-pages 分支發佈；程式修改後需重新建置及更新該分支。
 
