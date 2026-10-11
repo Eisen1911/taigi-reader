@@ -57,6 +57,8 @@ export default function Home({ series }: { series: SeriesData }) {
   const [currentBookId, setCurrentBookId] = useState(series.books[0].id);
   const [currentPage, setCurrentPage] = useState(1);
   const [zoom, setZoom] = useState(100);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [singleControlsOpen, setSingleControlsOpen] = useState(false);
   const [pageSide, setPageSide] = useState(1);
   const [viewMode, setViewMode] = useState('auto');
   const [wideScreen, setWideScreen] = useState(false);
@@ -279,8 +281,8 @@ export default function Home({ series }: { series: SeriesData }) {
         </aside>
 
         <section className="reader-column" aria-label="教材閱讀器">
-          <div className="reader-toolbar">
-            <div className="mobile-chapter">
+          <div className="reader-toolbar" data-settings-open={settingsOpen}>
+            <button type="button" className="mobile-settings-toggle" aria-expanded={settingsOpen} onClick={() => setSettingsOpen(v => !v)}>{settingsOpen ? '收起設定' : '目錄・設定'}</button><div className="mobile-chapter">
               <label htmlFor="book-select">選冊</label>
               <select
                 id="book-select"
@@ -342,7 +344,7 @@ export default function Home({ series }: { series: SeriesData }) {
               </Button>
             </div>
 
-            <label className="view-control">
+            <a className="mobile-about" href="./about.html">來源與授權</a><label className="view-control">
               <span className="sr-only">頁面模式</span>
               <select aria-label="頁面模式" value={viewMode} onChange={event => setViewMode(event.target.value)}>
                 <option value="auto">自動單／雙頁</option>
@@ -352,7 +354,7 @@ export default function Home({ series }: { series: SeriesData }) {
             </label>
             <label className="zoom-control">
               <span>顯示大小</span>
-              <select value={zoom} onChange={(event) => setZoom(Number(event.target.value))}>
+              <select aria-label="顯示大小" value={zoom} onChange={(event) => setZoom(Number(event.target.value))}>
                 {zoomOptions.map((value) => (
                   <option key={value} value={value}>{value}%</option>
                 ))}
@@ -393,7 +395,7 @@ export default function Home({ series }: { series: SeriesData }) {
         </section>
       </div>
 
-      <footer className="audio-dock" data-active={Boolean(activeAudio)}>
+      <footer className="audio-dock" data-active={Boolean(activeAudio)} data-single-open={singleControlsOpen} data-message={Boolean(message)}><button type="button" className="mobile-audio-toggle" disabled={!activeAudio} aria-expanded={singleControlsOpen} onClick={() => setSingleControlsOpen(v => !v)}>{singleControlsOpen ? '收起' : '單段控制'}</button>
         <div className="audio-status">
           <span className="audio-icon"><Volume2 /></span>
           <div>
