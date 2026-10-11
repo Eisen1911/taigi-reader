@@ -25,6 +25,9 @@ type Hotspot = {
 type BookPage = {
   number: number;
   image: string;
+  leftImage: string;
+  rightImage: string;
+  splitRatio: number;
   hotspots: Hotspot[];
 };
 
@@ -54,13 +57,15 @@ export default function Home({ series }: { series: SeriesData }) {
   const [currentBookId, setCurrentBookId] = useState(series.books[0].id);
   const [currentPage, setCurrentPage] = useState(1);
   const [zoom, setZoom] = useState(100);
+  const [pageSide, setPageSide] = useState(1);
   const [viewMode, setViewMode] = useState('auto');
   const [wideScreen, setWideScreen] = useState(false);
   useEffect(() => {
     const reader = document.querySelector('.reader-scroll');
     if (!reader) return;
     const observer = new ResizeObserver(entries => {
-      setWideScreen(entries[0].contentRect.width >= 960);
+      const width = entries[0].contentRect.width;
+      setWideScreen(width >= 960 || (width >= 700 && window.innerWidth > window.innerHeight));
     });
     observer.observe(reader);
     return () => observer.disconnect();
@@ -76,11 +81,21 @@ export default function Home({ series }: { series: SeriesData }) {
 
   const book = series.books.find((item) => item.id === currentBookId) ?? series.books[0];
   const page = book.pages[currentPage - 1] ?? book.pages[0];
-  const spreadStart = currentPage === 1 ? 1 : currentPage - currentPage % 2;
-  const visiblePages = doublePage && currentPage > 1
-    ? book.pages.slice(spreadStart - 1, spreadStart + 1) : [page];
-  const previousPage = doublePage ? (spreadStart <= 2 ? 1 : spreadStart - 2) : currentPage - 1;
-  const nextPage = doublePage ? (currentPage === 1 ? 2 : spreadStart + 2) : currentPage + 1;
+  const turnPage = (direction: number) => {
+    if (!doublePage && direction === 1 && pageSide === 0) {
+      goToPage(currentPage); setPageSide(1);
+    } else if (!doublePage && direction === -1 && pageSide === 1 && currentPage > 1) {
+      goToPage(currentPage); setPageSide(0);
+    } else {
+      goToPage(currentPage + direction);
+      setPageSide(direction < 0 || currentPage + direction === 1 ? 1 : 0);
+    }
+  };
+  const splitPercent = (page.splitRatio ?? 0.5) * 100;
+  const visibleHotspots = doublePage ? page.hotspots : page.hotspots.filter(h =>
+    (h.x + h.width / 2 >= splitPercent ? 1 : 0) === pageSide);
+  const pageOffset = pageSide === 0 ? 0 : splitPercent;
+  const pageScale = 100 / (pageSide === 0 ? splitPercent : 100 - splitPercent);
   const queue = book.pages.flatMap(p => p.hotspots.map(h => ({ page: p.number, hotspot: h })));
 
   useEffect(() => {
@@ -106,6 +121,7 @@ export default function Home({ series }: { series: SeriesData }) {
     const initialBook = series.books.find((item) => item.id === savedBook) ?? series.books[0];
     const savedPage = Number(window.localStorage.getItem(`taigi-series-page-${initialBook.id}`));
     setCurrentBookId(initialBook.id);
+    setPageSide(savedPage > 1 ? 0 : 1);
     setCurrentPage(
       Number.isFinite(savedPage) && savedPage > 0 && savedPage <= initialBook.totalPages
         ? savedPage
@@ -118,6 +134,7 @@ export default function Home({ series }: { series: SeriesData }) {
     setMessage('');
     const next = Math.min(Math.max(number, 1), book.totalPages);
     setCurrentPage(next);
+    setPageSide(next === 1 ? 1 : 0);
     setActiveAudio(null);
     window.localStorage.setItem(`taigi-series-page-${book.id}`, String(next));
     document.querySelector('.reader-scroll')?.scrollTo({ top: 0, behavior: 'smooth' });
@@ -130,6 +147,7 @@ export default function Home({ series }: { series: SeriesData }) {
     if (!nextBook) return;
     const savedPage = Number(window.localStorage.getItem(`taigi-series-page-${bookId}`));
     setCurrentBookId(bookId);
+    setPageSide(savedPage > 1 ? 0 : 1);
     setCurrentPage(
       Number.isFinite(savedPage) && savedPage > 0 && savedPage <= nextBook.totalPages
         ? savedPage
@@ -142,8 +160,8 @@ export default function Home({ series }: { series: SeriesData }) {
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'ArrowLeft') goToPage(previousPage);
-      if (event.key === 'ArrowRight') goToPage(nextPage);
+      if (event.key === 'ArrowLeft') turnPage(-1);
+      if (event.key === 'ArrowRight') turnPage(1);
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
@@ -160,6 +178,7 @@ export default function Home({ series }: { series: SeriesData }) {
 
   const playEntry = (entry: typeof queue[number]) => {
     setCurrentPage(entry.page);
+    setPageSide(entry.hotspot.x + entry.hotspot.width / 2 >= 50 ? 1 : 0);
     window.localStorage.setItem(`taigi-series-page-${book.id}`, String(entry.page));
     playAudio(entry.hotspot);
   };
@@ -186,7 +205,7 @@ export default function Home({ series }: { series: SeriesData }) {
       }
     } else {
       const topicEnd = book.chapters.find(chapter => chapter.page > currentPage)?.page ?? Infinity;
-      const entry = queue.find(item => item.page >= currentPage && item.page < topicEnd);
+      const entry = queue.find(item => item.page >= currentPage && item.page < topicEnd && (doublePage || item.page > currentPage || (item.hotspot.x + item.hotspot.width / 2 >= 50 ? 1 : 0) >= pageSide));
       if (entry) playEntry(entry);
       else setMessage('本單元目前頁面之後沒有可播放的音頻');
     }
@@ -296,7 +315,7 @@ export default function Home({ series }: { series: SeriesData }) {
                 size="icon"
                 aria-label="上一頁"
                 disabled={currentPage <= 1}
-                onClick={() => goToPage(previousPage)}
+                onClick={() => turnPage(-1)}
               >
                 <ChevronLeft />
               </Button>
@@ -307,17 +326,17 @@ export default function Home({ series }: { series: SeriesData }) {
                   onChange={(event) => goToPage(Number(event.target.value))}
                 >
                   {book.pages.map((item) => (
-                    <option key={item.number} value={item.number}>第 {item.number} 頁</option>
+                    <option key={item.number} value={item.number}>第 {item.number} 組</option>
                   ))}
                 </select>
-                <span>/ {book.totalPages}</span>
+                <span>/ {book.totalPages}{!doublePage ? (pageSide === 0 ? " · 左頁" : " · 右頁") : ""}</span>
               </label>
               <Button
                 variant="outline"
                 size="icon"
                 aria-label="下一頁"
-                disabled={nextPage > book.totalPages}
-                onClick={() => goToPage(nextPage)}
+                disabled={currentPage >= book.totalPages && (doublePage || pageSide === 1)}
+                onClick={() => turnPage(1)}
               >
                 <ChevronRight />
               </Button>
@@ -342,36 +361,33 @@ export default function Home({ series }: { series: SeriesData }) {
           </div>
 
           <div className="reader-scroll">
-            <div className="page-spread" data-double={doublePage} style={{ '--spread-zoom': zoom + '%' } as React.CSSProperties}>
-            {visiblePages.map(visiblePage => <div key={visiblePage.number}
-              className="page-stage"
-              style={{ '--reader-width': `${zoom * 12}px`, '--mobile-reader-width': `${zoom}%` } as React.CSSProperties}
-            >
+            <div className="physical-page" data-double={doublePage} data-side={pageSide} style={{ '--physical-width': zoom + '%' } as React.CSSProperties}>
+            <div className="page-stage">
               <img
-                src={visiblePage.image}
-                alt={`${book.title}第 ${visiblePage.number} 頁`}
+                src={doublePage ? page.image : pageSide === 0 ? page.leftImage : page.rightImage}
+                alt={`${book.title}第 ${page.number} 組${doublePage ? "雙頁" : pageSide === 0 ? "左頁" : "右頁"}`}
                 draggable={false}
               />
               <div className="hotspot-layer" aria-label="頁面發音按鈕">
-                {visiblePage.hotspots.map((hotspot) => (
+                {visibleHotspots.map((hotspot) => (
                   <button
                     type="button"
                     key={hotspot.id}
                     className="audio-hotspot"
                     data-active={activeAudio?.id === hotspot.id}
                     style={{
-                      left: `${hotspot.x}%`,
+                      left: `${doublePage ? hotspot.x : (hotspot.x - pageOffset) * pageScale}%`,
                       top: `${hotspot.y}%`,
-                      width: `${hotspot.width}%`,
+                      width: `${doublePage ? hotspot.width : hotspot.width * pageScale}%`,
                       height: `${hotspot.height}%`,
                     }}
                     aria-label={`播放發音 ${hotspot.label}`}
                     title={`播放 ${hotspot.label}`}
-                    onClick={() => playEntry({ page: visiblePage.number, hotspot })}
+                    onClick={() => playEntry({ page: page.number, hotspot })}
                   />
                 ))}
               </div>
-            </div>)}
+            </div>
             </div>
           </div>
         </section>

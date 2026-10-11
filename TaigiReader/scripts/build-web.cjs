@@ -10,5 +10,5 @@ fs.copyFileSync(path.join(root,'src/about.html'),path.join(out,'about.html'));
 fs.copyFileSync(path.join(root,'ATTRIBUTION.txt'),path.join(out,'ATTRIBUTION.txt'));
 fs.writeFileSync(path.join(out,'.nojekyll'),'');
 const series=JSON.parse(fs.readFileSync(path.join(out,'series-data.json'),'utf8'));
-for(const b of series.books)for(const p of b.pages)for(const name of [p.image,...p.hotspots.map(h=>h.audio)])if(!fs.existsSync(path.join(out,name)))throw Error('Missing '+name);
+for(const b of series.books)for(const p of b.pages)for(const name of [p.image,p.leftImage,p.rightImage,...p.hotspots.map(h=>h.audio)])if(!fs.existsSync(path.join(out,name)))throw Error('Missing '+name);
 console.log('Web build ready: '+out+'; '+series.books.length+' books. ');

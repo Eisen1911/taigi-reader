@@ -19,3 +19,5 @@ Web 已在內建瀏覽器實測跨頁、單段互斥播放、單元末停止、3
 本機獨立 Playwright 瀏覽器啟動曾出現 spawn UNKNOWN，未宣稱其自動測試通過。
 
 教材及程式碼授權分開適用，詳見 ATTRIBUTION.txt。
+
+手機單頁：原始跨頁圖保留，另產生左右書頁；scripts/split-pages.py 可重建（需 Python 及 Pillow）。頁碼選單以原圖組數顯示，單頁翻頁依左、右順序。
