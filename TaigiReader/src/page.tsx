@@ -61,18 +61,21 @@ export default function Home({ series }: { series: SeriesData }) {
   const [singleControlsOpen, setSingleControlsOpen] = useState(false);
   const [pageSide, setPageSide] = useState(1);
   const [viewMode, setViewMode] = useState('auto');
+  const [desktopLayout, setDesktopLayout] = useState(false);
   const [wideScreen, setWideScreen] = useState(false);
   useEffect(() => {
     const reader = document.querySelector('.reader-scroll');
     if (!reader) return;
     const observer = new ResizeObserver(entries => {
       const width = entries[0].contentRect.width;
-      setWideScreen(width >= 960 || (width >= 700 && window.innerWidth > window.innerHeight));
+      const desktop = window.matchMedia('(min-width:901px) and (min-height:501px), (min-width:1101px)').matches;
+      setDesktopLayout(desktop);
+      setWideScreen(desktop ? width / (zoom / 100) >= 960 : width >= 960 || (width >= 700 && window.innerWidth > window.innerHeight));
     });
     observer.observe(reader);
     return () => observer.disconnect();
-  }, []);
-  const doublePage = viewMode === 'double' || (viewMode === 'auto' && wideScreen);
+  }, [zoom]);
+  const doublePage = desktopLayout ? wideScreen : viewMode === 'double' || (viewMode === 'auto' && wideScreen);
   const [activeAudio, setActiveAudio] = useState<Hotspot | null>(null);
   const continuousRef = useRef(true);
   const previewRef = useRef<HTMLAudioElement>(null);

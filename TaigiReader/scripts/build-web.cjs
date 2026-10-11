@@ -3,7 +3,7 @@ const root=path.resolve(__dirname,'..'),content=path.join(root,'local-content'),
 if(!fs.existsSync(path.join(content,'series-data.json')))throw Error('Missing local-content/series-data.json; import your local textbook first.');
 fs.mkdirSync(path.join(out,'assets'),{recursive:true});
 esbuild.buildSync({entryPoints:[path.join(root,'src/renderer.tsx')],bundle:true,minify:true,format:'esm',platform:'browser',jsx:'automatic',define:{'process.env.NODE_ENV':'"production"'},outfile:path.join(out,'assets/app.js')});
-for(const name of ['base.css','playback.css'])fs.copyFileSync(path.join(root,'src',name),path.join(out,'assets',name));
+for(const name of ['base.css','playback.css','desktop.css','mobile.css'])fs.copyFileSync(path.join(root,'src',name),path.join(out,'assets',name));
 fs.copyFileSync(path.join(root,'src/index.html'),path.join(out,'index.html'));
 fs.cpSync(content,out,{recursive:true});
 fs.copyFileSync(path.join(root,'src/about.html'),path.join(out,'about.html'));
