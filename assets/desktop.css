@@ -1,0 +1,23 @@
+/* Desktop layout: controls never size themselves from the zoomed book image. */
+@media(min-width:901px) and (min-height:501px), (min-width:1101px){
+.app-shell{height:100dvh;min-height:0;padding:0;display:flex;flex-direction:column;overflow:hidden}
+.topbar{position:relative;top:auto;min-height:64px;flex-shrink:0;padding:10px 20px}
+.workspace{display:grid;grid-template-columns:224px minmax(0,1fr);flex:1;min-height:0;overflow:hidden}
+.chapter-panel{display:block;position:relative;top:auto;height:100%;min-height:0;overflow-y:auto}
+.reader-column{display:flex;flex-direction:column;min-width:0;min-height:0}
+.reader-toolbar{position:relative;top:auto;display:flex;flex-wrap:wrap;align-items:center;gap:12px;min-height:60px;padding:8px 16px;flex-shrink:0}
+.reader-toolbar .mobile-chapter,.mobile-settings-toggle,.mobile-audio-toggle,.mobile-about{display:none}
+.page-controls{flex:0 0 auto;margin-right:auto;gap:8px}.page-picker{font-size:13px;white-space:nowrap}
+.reader-toolbar .view-control,.reader-toolbar .zoom-control{display:flex;align-items:center;gap:8px;margin:0;flex:0 0 auto}
+.reader-toolbar select{height:36px;font-size:14px}.reader-button{width:36px;height:36px}
+.reader-scroll{flex:1;min-width:0;min-height:0;overflow:auto;padding:20px;scroll-padding:20px}
+.physical-page{max-width:none;flex-shrink:0}.physical-page[data-double=false]{max-width:none}
+.audio-dock{position:relative;flex-shrink:0;min-height:100px;padding:12px 20px;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:16px}
+.audio-status{display:flex;min-width:0}.audio-status>div{min-width:0}.audio-status strong{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px}
+.playback-controls{grid-column:2;grid-row:1}.global-playback{min-width:170px;min-height:52px;font-size:19px}.playback-controls small{display:block}
+.single-player{display:flex;flex-direction:column;grid-column:3;grid-row:1;width:100%;max-width:320px;justify-self:end}.single-player .single-audio{display:block;width:100%;height:38px}.single-replay{align-self:flex-end;min-height:28px}
+.audio-placeholder{display:block;font-size:12px;text-align:right}
+}
+@media(min-width:901px) and (min-height:501px), (min-width:1101px){
+.reader-toolbar .view-control{display:none}
+}
