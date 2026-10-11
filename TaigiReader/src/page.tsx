@@ -77,12 +77,12 @@ export default function Home({ series }: { series: SeriesData }) {
   }, [zoom]);
   useEffect(() => {
     if (!desktopLayout) return;
-    const reader = document.querySelector('.reader-column');
+    const reader = document.querySelector('.app-shell');
     if (!reader) return;
     let lastStep = -Infinity;
     const onWheel = (event: WheelEvent) => {
       if (!event.ctrlKey || event.deltaY === 0) return;
-      // Use a non-passive listener to prevent browser zoom only inside the reader.
+      // Use a non-passive listener to prevent browser zoom across the desktop app; only the book changes size.
       event.preventDefault();
       const now = performance.now();
       if (now - lastStep < 150) return;
@@ -93,8 +93,8 @@ export default function Home({ series }: { series: SeriesData }) {
         return zoomOptions[next];
       });
     };
-    reader.addEventListener('wheel', onWheel, { passive: false });
-    return () => reader.removeEventListener('wheel', onWheel);
+    reader.addEventListener('wheel', onWheel, { passive: false, capture: true });
+    return () => reader.removeEventListener('wheel', onWheel, { capture: true });
   }, [desktopLayout]);
   const doublePage = desktopLayout ? wideScreen : viewMode === 'double' || (viewMode === 'auto' && wideScreen);
   const [activeAudio, setActiveAudio] = useState<Hotspot | null>(null);
@@ -376,7 +376,7 @@ export default function Home({ series }: { series: SeriesData }) {
                 <option value="double">雙頁</option>
               </select>
             </label>
-            <label className="zoom-control" title="閱讀區內按住 Ctrl 並滾動滑鼠滾輪可縮放教材">
+            <label className="zoom-control" title="按住 Ctrl 並滾動滑鼠滾輪只縮放書頁，介面大小不變">
               <span>顯示大小</span>
               <select aria-label="顯示大小" value={zoom} onChange={(event) => setZoom(Number(event.target.value))}>
                 {zoomOptions.map((value) => (
