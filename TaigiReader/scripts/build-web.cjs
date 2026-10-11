@@ -1,0 +1,14 @@
+const fs=require('node:fs'),path=require('node:path'),esbuild=require('esbuild');
+const root=path.resolve(__dirname,'..'),content=path.join(root,'local-content'),out=path.join(root,'dist/web');
+if(!fs.existsSync(path.join(content,'series-data.json')))throw Error('Missing local-content/series-data.json; import your local textbook first.');
+fs.mkdirSync(path.join(out,'assets'),{recursive:true});
+esbuild.buildSync({entryPoints:[path.join(root,'src/renderer.tsx')],bundle:true,minify:true,format:'esm',platform:'browser',jsx:'automatic',define:{'process.env.NODE_ENV':'"production"'},outfile:path.join(out,'assets/app.js')});
+for(const name of ['base.css','playback.css'])fs.copyFileSync(path.join(root,'src',name),path.join(out,'assets',name));
+fs.copyFileSync(path.join(root,'src/index.html'),path.join(out,'index.html'));
+fs.cpSync(content,out,{recursive:true});
+fs.copyFileSync(path.join(root,'src/about.html'),path.join(out,'about.html'));
+fs.copyFileSync(path.join(root,'ATTRIBUTION.txt'),path.join(out,'ATTRIBUTION.txt'));
+fs.writeFileSync(path.join(out,'.nojekyll'),'');
+const series=JSON.parse(fs.readFileSync(path.join(out,'series-data.json'),'utf8'));
+for(const b of series.books)for(const p of b.pages)for(const name of [p.image,...p.hotspots.map(h=>h.audio)])if(!fs.existsSync(path.join(out,name)))throw Error('Missing '+name);
+console.log('Web build ready: '+out+'; '+series.books.length+' books. ');

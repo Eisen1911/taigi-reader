@@ -1,0 +1,8 @@
+/node_modules/
+/dist/
+/legacy-local/
+/test-results/
+*.lnk
+*.asar
+*.zip
+__pycache__/

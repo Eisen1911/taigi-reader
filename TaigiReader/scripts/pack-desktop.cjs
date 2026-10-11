@@ -1,0 +1,10 @@
+const fs=require('node:fs'),path=require('node:path'),asar=require('@electron/asar');
+const root=path.resolve(__dirname,'..'),stage=path.join(root,'dist/desktop-stage'),desktop=path.join(root,'dist/desktop');
+if(!fs.existsSync(path.join(desktop,'resources')))throw Error('Place an Electron runtime in dist/desktop first.');
+fs.mkdirSync(path.join(stage,'electron'),{recursive:true});fs.mkdirSync(path.join(stage,'build'),{recursive:true});
+fs.cpSync(path.join(root,'dist/web'),path.join(stage,'dist-electron/renderer'),{recursive:true});
+fs.copyFileSync(path.join(root,'electron/main.cjs'),path.join(stage,'electron/main.cjs'));
+fs.copyFileSync(path.join(root,'tests/playback.js'),path.join(stage,'electron/playback-test.js'));
+fs.copyFileSync(path.join(root,'assets/icon.ico'),path.join(stage,'build/icon.ico'));
+fs.writeFileSync(path.join(stage,'package.json'),JSON.stringify({name:'taigi-reader',version:'0.2.0',main:'electron/main.cjs'}));
+asar.createPackage(stage,path.join(desktop,'resources/app.asar')).then(()=>console.log('Desktop archive rebuilt from shared web sources.')).catch(e=>{console.error(e);process.exitCode=1;});

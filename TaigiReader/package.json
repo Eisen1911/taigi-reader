@@ -1,0 +1,22 @@
+{
+  "name": "taigi-reader",
+  "version": "0.2.0",
+  "private": true,
+  "description": "Local-first Taigi textbook reader; textbook assets are not redistributable by default",
+  "scripts": {
+    "build:web": "node scripts/build-web.cjs",
+    "start:web": "node scripts/serve-web.cjs",
+    "pack:desktop": "node scripts/pack-desktop.cjs",
+    "test:web": "node tests/web.cjs"
+  },
+  "dependencies": {
+    "react": "19.2.6",
+    "react-dom": "19.2.6",
+    "lucide-react": "1.31.0"
+  },
+  "devDependencies": {
+    "esbuild": "0.27.3",
+    "@electron/asar": "3.4.1",
+    "playwright": "1.62.1"
+  }
+}

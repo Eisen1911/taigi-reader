@@ -1,0 +1,47 @@
+(async () => {
+ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+ const wait=async(f,label)=>{for(let i=0;i<150;i++){if(f())return;await sleep(40);}throw Error(label);};
+ const data=await(await fetch('series-data.json')).json();
+ const selectPage=async n=>{const s=document.querySelector('.page-picker select');s.value=String(n);s.dispatchEvent(new Event('change',{bubbles:true}));await sleep(100);};
+ document.querySelectorAll('.chapter-list > div > .chapter-link')[0].click();await sleep(100);
+ const book=data.books[0];const pages=book.pages.filter(p=>p.hotspots.length);
+ const pair=pages.findIndex((p,i)=>pages[i+1] && !book.chapters.some(c=>c.page>p.number&&c.page<=pages[i+1].number));
+ if(pair<0)throw Error('no cross-page fixture');
+ await selectPage(pages[pair].number);
+ document.querySelectorAll('.audio-hotspot')[pages[pair].hotspots.length-1].click();
+ await wait(()=>document.querySelector('.continuous-audio'),'main audio');
+ let main=document.querySelector('.continuous-audio');main.muted=true;
+ main.dispatchEvent(new Event('ended'));
+ await wait(()=>Number(document.querySelector('.page-picker select').value)===pages[pair+1].number,'cross page');
+ await wait(()=>document.querySelector('.continuous-audio').getAttribute('src')===pages[pair+1].hotspots[0].audio,'next track');
+ // Pause and resume a long track, so a natural short-clip ending cannot race assertions.
+ document.querySelectorAll('.chapter-list > div > .chapter-link')[6].click();await sleep(100);
+ const lastBook=data.books[6];const first=lastBook.pages.find(p=>p.hotspots.length);
+ await selectPage(first.number);document.querySelector('.audio-hotspot').click();
+ await wait(()=>document.querySelector('.continuous-audio'),'long audio');
+ main=document.querySelector('.continuous-audio');main.muted=true;
+ await wait(()=>main.currentTime>0.1,'main plays');
+ document.querySelector('.global-playback').click();await sleep(100);
+ if(!main.paused)throw Error('main pause');const time=main.currentTime;await sleep(150);
+ if(Math.abs(main.currentTime-time)>0.02)throw Error('pause position');
+ document.querySelector('.global-playback').click();await wait(()=>main.currentTime>time+0.05,'resume');
+ const single=document.querySelector('.single-audio');single.muted=true;await single.play();await sleep(100);
+ if(!main.paused||single.paused)throw Error('independent single playback');
+ const selected=single.getAttribute('src');single.dispatchEvent(new Event('ended'));await sleep(100);
+ if(document.querySelector('.single-audio').getAttribute('src')!==selected)throw Error('single advanced');
+ single.pause();document.querySelector('.single-replay').click();await wait(()=>single.currentTime>0.05&&!single.paused,'single replay');
+ document.querySelector('.global-playback').click();await sleep(100);if(!single.paused||main.paused)throw Error('main takes over');
+ const topicBoundary=lastBook.chapters.find(c=>c.page>first.number).page;
+ const topicFinal=lastBook.pages.filter(p=>p.hotspots.length&&p.number<topicBoundary).at(-1);
+ await selectPage(topicFinal.number);document.querySelectorAll('.audio-hotspot')[topicFinal.hotspots.length-1].click();await sleep(100);
+ main=document.querySelector('.continuous-audio');main.pause();main.dispatchEvent(new Event('ended'));await sleep(150);
+ if(!document.querySelector('[role=status]').textContent.includes('本單元已播放完畢'))throw Error('topic end');
+ if(Number(document.querySelector('.page-picker select').value)!==topicFinal.number)throw Error('crossed topic');
+ const finalPage=lastBook.pages.filter(p=>p.hotspots.length).at(-1);
+ await selectPage(finalPage.number);document.querySelectorAll('.audio-hotspot')[finalPage.hotspots.length-1].click();await sleep(100);
+ main=document.querySelector('.continuous-audio');main.pause();main.dispatchEvent(new Event('ended'));await sleep(150);
+ if(!document.querySelector('[role=status]').textContent.includes('本單元已播放完畢'))throw Error('book end');
+ if(document.querySelectorAll('.chapter-link')[6].dataset.active!=='true')throw Error('crossed book');
+ document.querySelectorAll('.chapter-link')[0].click();await sleep(100);await selectPage(pages[0].number);
+ return {crossPage:true,pauseResume:true,singleIndependent:true,singleReplay:true,mutualExclusion:true,topicBoundary:true,bookBoundary:true};
+})()
