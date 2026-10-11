@@ -21,3 +21,5 @@
 @media(min-width:901px) and (min-height:501px), (min-width:1101px){
 .reader-toolbar .view-control{display:none}
 }
+
+.page-picker select{max-width:240px;text-overflow:ellipsis}

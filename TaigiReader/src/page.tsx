@@ -350,16 +350,19 @@ export default function Home({ series }: { series: SeriesData }) {
                 <ChevronLeft />
               </Button>
               <label className="page-picker">
-                <span className="sr-only">跳至頁面</span>
+                <span className="sr-only">跳至單元</span>
                 <select
-                  value={currentPage}
-                  onChange={(event) => goToPage(Number(event.target.value))}
+                  aria-label="跳至單元"
+                  value={`${currentChapter.title}-${currentChapter.page}`}
+                  onChange={event => {
+                    const chapter = book.chapters.find(item => `${item.title}-${item.page}` === event.target.value);
+                    if (chapter) goToPage(chapter.page);
+                  }}
                 >
-                  {book.pages.map((item) => (
-                    <option key={item.number} value={item.number}>第 {item.number} 組</option>
+                  {book.chapters.map(chapter => (
+                    <option key={`${chapter.title}-${chapter.page}`} value={`${chapter.title}-${chapter.page}`}>{chapter.title}</option>
                   ))}
                 </select>
-                <span>/ {book.totalPages}{!doublePage ? (pageSide === 0 ? " · 左頁" : " · 右頁") : ""}</span>
               </label>
               <Button
                 variant="outline"
