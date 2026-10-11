@@ -75,6 +75,27 @@ export default function Home({ series }: { series: SeriesData }) {
     observer.observe(reader);
     return () => observer.disconnect();
   }, [zoom]);
+  useEffect(() => {
+    if (!desktopLayout) return;
+    const reader = document.querySelector('.reader-column');
+    if (!reader) return;
+    let lastStep = -Infinity;
+    const onWheel = (event: WheelEvent) => {
+      if (!event.ctrlKey || event.deltaY === 0) return;
+      // Use a non-passive listener to prevent browser zoom only inside the reader.
+      event.preventDefault();
+      const now = performance.now();
+      if (now - lastStep < 150) return;
+      lastStep = now;
+      setZoom(value => {
+        const index = zoomOptions.indexOf(value);
+        const next = Math.max(0, Math.min(zoomOptions.length - 1, index + (event.deltaY < 0 ? 1 : -1)));
+        return zoomOptions[next];
+      });
+    };
+    reader.addEventListener('wheel', onWheel, { passive: false });
+    return () => reader.removeEventListener('wheel', onWheel);
+  }, [desktopLayout]);
   const doublePage = desktopLayout ? wideScreen : viewMode === 'double' || (viewMode === 'auto' && wideScreen);
   const [activeAudio, setActiveAudio] = useState<Hotspot | null>(null);
   const continuousRef = useRef(true);
@@ -355,7 +376,7 @@ export default function Home({ series }: { series: SeriesData }) {
                 <option value="double">雙頁</option>
               </select>
             </label>
-            <label className="zoom-control">
+            <label className="zoom-control" title="閱讀區內按住 Ctrl 並滾動滑鼠滾輪可縮放教材">
               <span>顯示大小</span>
               <select aria-label="顯示大小" value={zoom} onChange={(event) => setZoom(Number(event.target.value))}>
                 {zoomOptions.map((value) => (
