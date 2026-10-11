@@ -57,6 +57,8 @@ export default function Home({ series }: { series: SeriesData }) {
   const [currentBookId, setCurrentBookId] = useState(series.books[0].id);
   const [currentPage, setCurrentPage] = useState(1);
   const [zoom, setZoom] = useState(100);
+  const [readerSize, setReaderSize] = useState({ width: 0, height: 0 });
+  const [imageAspect, setImageAspect] = useState({ single: 0.708, double: 1.417 });
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [singleControlsOpen, setSingleControlsOpen] = useState(false);
   const [pageSide, setPageSide] = useState(1);
@@ -68,6 +70,8 @@ export default function Home({ series }: { series: SeriesData }) {
     if (!reader) return;
     const observer = new ResizeObserver(entries => {
       const width = entries[0].contentRect.width;
+      const height = entries[0].contentRect.height;
+      setReaderSize(previous => previous.width === width && previous.height === height ? previous : { width, height });
       const desktop = window.matchMedia('(min-width:901px) and (min-height:501px), (min-width:1101px)').matches;
       setDesktopLayout(desktop);
       setWideScreen(desktop ? width / (zoom / 100) >= 960 : width >= 960 || (width >= 700 && window.innerWidth > window.innerHeight));
@@ -380,18 +384,24 @@ export default function Home({ series }: { series: SeriesData }) {
               <span>顯示大小</span>
               <select aria-label="顯示大小" value={zoom} onChange={(event) => setZoom(Number(event.target.value))}>
                 {zoomOptions.map((value) => (
-                  <option key={value} value={value}>{value}%</option>
+                  <option key={value} value={value}>{value === 100 ? '100% · 適合視窗' : `${value}%`}</option>
                 ))}
               </select>
             </label>
           </div>
 
           <div className="reader-scroll">
-            <div className="physical-page" data-double={doublePage} data-side={pageSide} style={{ '--physical-width': zoom + '%' } as React.CSSProperties}>
+            <div className="physical-page" data-double={doublePage} data-side={pageSide} style={{ '--physical-width': desktopLayout && readerSize.height > 0 ? Math.max(1, Math.min(readerSize.width, readerSize.height * (doublePage ? imageAspect.double : imageAspect.single)) - 2) * zoom / 100 + 'px' : zoom + '%' } as React.CSSProperties}>
             <div className="page-stage">
               <img
                 src={doublePage ? page.image : pageSide === 0 ? page.leftImage : page.rightImage}
                 alt={`${book.title}第 ${page.number} 組${doublePage ? "雙頁" : pageSide === 0 ? "左頁" : "右頁"}`}
+                onLoad={event => {
+                  const image = event.currentTarget;
+                  const ratio = image.naturalWidth / image.naturalHeight;
+                  const key = doublePage ? 'double' : 'single';
+                  setImageAspect(previous => previous[key] === ratio ? previous : { ...previous, [key]: ratio });
+                }}
                 draggable={false}
               />
               <div className="hotspot-layer" aria-label="頁面發音按鈕">
