@@ -54,6 +54,18 @@ export default function Home({ series }: { series: SeriesData }) {
   const [currentBookId, setCurrentBookId] = useState(series.books[0].id);
   const [currentPage, setCurrentPage] = useState(1);
   const [zoom, setZoom] = useState(100);
+  const [viewMode, setViewMode] = useState('auto');
+  const [wideScreen, setWideScreen] = useState(false);
+  useEffect(() => {
+    const reader = document.querySelector('.reader-scroll');
+    if (!reader) return;
+    const observer = new ResizeObserver(entries => {
+      setWideScreen(entries[0].contentRect.width >= 960);
+    });
+    observer.observe(reader);
+    return () => observer.disconnect();
+  }, []);
+  const doublePage = viewMode === 'double' || (viewMode === 'auto' && wideScreen);
   const [activeAudio, setActiveAudio] = useState<Hotspot | null>(null);
   const continuousRef = useRef(true);
   const previewRef = useRef<HTMLAudioElement>(null);
@@ -64,6 +76,11 @@ export default function Home({ series }: { series: SeriesData }) {
 
   const book = series.books.find((item) => item.id === currentBookId) ?? series.books[0];
   const page = book.pages[currentPage - 1] ?? book.pages[0];
+  const spreadStart = currentPage === 1 ? 1 : currentPage - currentPage % 2;
+  const visiblePages = doublePage && currentPage > 1
+    ? book.pages.slice(spreadStart - 1, spreadStart + 1) : [page];
+  const previousPage = doublePage ? (spreadStart <= 2 ? 1 : spreadStart - 2) : currentPage - 1;
+  const nextPage = doublePage ? (currentPage === 1 ? 2 : spreadStart + 2) : currentPage + 1;
   const queue = book.pages.flatMap(p => p.hotspots.map(h => ({ page: p.number, hotspot: h })));
 
   useEffect(() => {
@@ -125,8 +142,8 @@ export default function Home({ series }: { series: SeriesData }) {
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'ArrowLeft') goToPage(currentPage - 1);
-      if (event.key === 'ArrowRight') goToPage(currentPage + 1);
+      if (event.key === 'ArrowLeft') goToPage(previousPage);
+      if (event.key === 'ArrowRight') goToPage(nextPage);
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
@@ -279,7 +296,7 @@ export default function Home({ series }: { series: SeriesData }) {
                 size="icon"
                 aria-label="上一頁"
                 disabled={currentPage <= 1}
-                onClick={() => goToPage(currentPage - 1)}
+                onClick={() => goToPage(previousPage)}
               >
                 <ChevronLeft />
               </Button>
@@ -299,13 +316,21 @@ export default function Home({ series }: { series: SeriesData }) {
                 variant="outline"
                 size="icon"
                 aria-label="下一頁"
-                disabled={currentPage >= book.totalPages}
-                onClick={() => goToPage(currentPage + 1)}
+                disabled={nextPage > book.totalPages}
+                onClick={() => goToPage(nextPage)}
               >
                 <ChevronRight />
               </Button>
             </div>
 
+            <label className="view-control">
+              <span className="sr-only">頁面模式</span>
+              <select aria-label="頁面模式" value={viewMode} onChange={event => setViewMode(event.target.value)}>
+                <option value="auto">自動單／雙頁</option>
+                <option value="single">單頁</option>
+                <option value="double">雙頁</option>
+              </select>
+            </label>
             <label className="zoom-control">
               <span>顯示大小</span>
               <select value={zoom} onChange={(event) => setZoom(Number(event.target.value))}>
@@ -317,17 +342,18 @@ export default function Home({ series }: { series: SeriesData }) {
           </div>
 
           <div className="reader-scroll">
-            <div
+            <div className="page-spread" data-double={doublePage} style={{ '--spread-zoom': zoom + '%' } as React.CSSProperties}>
+            {visiblePages.map(visiblePage => <div key={visiblePage.number}
               className="page-stage"
               style={{ '--reader-width': `${zoom * 12}px`, '--mobile-reader-width': `${zoom}%` } as React.CSSProperties}
             >
               <img
-                src={page.image}
-                alt={`${book.title}第 ${page.number} 頁`}
+                src={visiblePage.image}
+                alt={`${book.title}第 ${visiblePage.number} 頁`}
                 draggable={false}
               />
               <div className="hotspot-layer" aria-label="頁面發音按鈕">
-                {page.hotspots.map((hotspot) => (
+                {visiblePage.hotspots.map((hotspot) => (
                   <button
                     type="button"
                     key={hotspot.id}
@@ -341,10 +367,11 @@ export default function Home({ series }: { series: SeriesData }) {
                     }}
                     aria-label={`播放發音 ${hotspot.label}`}
                     title={`播放 ${hotspot.label}`}
-                    onClick={() => playAudio(hotspot)}
+                    onClick={() => playEntry({ page: visiblePage.number, hotspot })}
                   />
                 ))}
               </div>
+            </div>)}
             </div>
           </div>
         </section>
@@ -375,4 +402,3 @@ export default function Home({ series }: { series: SeriesData }) {
     </main>
   );
 }
-
