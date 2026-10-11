@@ -319,7 +319,7 @@ export default function Home({ series }: { series: SeriesData }) {
           <div className="reader-scroll">
             <div
               className="page-stage"
-              style={{ '--reader-width': `${zoom * 12}px` } as React.CSSProperties}
+              style={{ '--reader-width': `${zoom * 12}px`, '--mobile-reader-width': `${zoom}%` } as React.CSSProperties}
             >
               <img
                 src={page.image}
@@ -375,3 +375,4 @@ export default function Home({ series }: { series: SeriesData }) {
     </main>
   );
 }
+

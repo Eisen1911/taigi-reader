@@ -11,3 +11,21 @@
 @media(max-width:1000px) { .audio-dock { gap:10px; } .global-playback {min-width:130px;padding:8px 14px;} .audio-status strong {font-size:12px;} }
 
 .reader-button{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border:1px solid #ccc;border-radius:8px;background:white;cursor:pointer}.reader-button svg{width:18px}.reader-button:disabled{opacity:.4}.reader-button:focus-visible{outline:3px solid #b69548}.app-shell{height:100dvh}.audio-dock{min-height:108px}.reader-scroll{scroll-padding-bottom:30px}@media(max-width:700px){.audio-dock{grid-template-columns:1fr 1fr;gap:8px;padding:10px;min-height:150px}.audio-status{grid-column:1/-1}.playback-controls{grid-column:1}.single-player{grid-column:2}.global-playback{min-width:120px;font-size:16px}.playback-controls small{font-size:10px;text-align:center}.app-shell{padding-bottom:160px}.mobile-chapter{display:flex;visibility:visible;gap:4px}.mobile-chapter select{max-width:130px}.topbar-hint{display:none}.reader-toolbar{display:flex;flex-wrap:wrap;gap:6px;padding:8px}.reader-scroll{padding:8px}.page-stage{min-width:0;width:var(--reader-width);max-width:none}.page-stage img{width:100%}}
+
+/* Fit mobile pages while keeping playback controls outside the scroll area. */
+@media(max-width:900px){
+.app-shell{height:100dvh;min-height:0;padding-bottom:0;display:flex;flex-direction:column;overflow:hidden}
+.topbar{position:relative;flex-shrink:0;min-height:58px;padding:8px 12px;gap:8px}.topbar h1{font-size:17px}.topbar .eyebrow{font-size:10px}.brand-mark{display:none}
+.workspace{display:flex;flex:1;min-height:0;overflow:hidden}.chapter-panel{display:none}.reader-column{display:flex;flex-direction:column;flex:1;min-height:0}
+.reader-toolbar{position:relative;top:auto;display:flex;flex-wrap:wrap;gap:6px;flex-shrink:0;padding:6px 10px}.mobile-chapter{display:flex;visibility:visible;flex:1 0 100%;min-width:0;gap:8px}.mobile-chapter select{flex:1;min-width:0;max-width:none;width:0}.mobile-chapter label{display:none}
+.reader-toolbar select{min-height:44px;font-size:16px}.reader-button{width:44px;height:44px}.page-controls{gap:4px}.page-picker{gap:4px}.zoom-control{margin-left:auto;gap:4px}.zoom-control>span{display:none}
+.reader-scroll{flex:1;min-height:0;padding:8px;overflow:auto;overscroll-behavior:contain}.page-stage{width:var(--mobile-reader-width,100%);min-width:0;max-width:none}
+.audio-dock{position:relative;flex-shrink:0;min-height:0;grid-template-columns:minmax(0,1fr);gap:5px;padding:8px 12px;padding-bottom:max(8px,env(safe-area-inset-bottom))}
+.audio-status{grid-column:1;min-width:0;justify-content:center}.audio-status .audio-icon{display:none}.audio-status p{font-size:11px}.audio-status strong{display:block;font-size:11px;max-width:85vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.playback-controls{grid-column:1;grid-row:2}.global-playback{min-height:44px;min-width:170px;font-size:16px;padding:6px 20px}.playback-controls small{font-size:10px}
+.single-player{grid-column:1;width:100%;max-width:420px;justify-self:center;display:flex;flex-direction:row;align-items:center;gap:8px}.single-replay{flex-shrink:0;align-self:center;min-height:44px;font-size:12px;padding:4px 8px}.single-player .single-audio{min-width:0;flex:1;height:36px}.audio-placeholder{display:none}
+}
+@media(max-width:900px) and (max-height:500px){
+.topbar{display:none}.mobile-chapter{flex:1 1 220px}.audio-status,.playback-controls small{display:none}.audio-dock{grid-template-columns:1fr 1fr}.playback-controls{grid-column:1;grid-row:1}.single-player{grid-column:2}
+}
+
