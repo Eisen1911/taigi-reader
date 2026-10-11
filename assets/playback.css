@@ -29,3 +29,9 @@
 .topbar{display:none}.mobile-chapter{flex:1 1 220px}.audio-status,.playback-controls small{display:none}.audio-dock{grid-template-columns:1fr 1fr}.playback-controls{grid-column:1;grid-row:1}.single-player{grid-column:2}
 }
 
+
+.page-spread[data-double=true]{display:flex;align-items:flex-start;gap:8px;width:var(--spread-zoom);margin:0 auto}
+.page-spread[data-double=true] .page-stage{flex:1;min-width:0;width:0;margin:0}
+.view-control select{min-height:44px;font-size:14px;max-width:150px}
+@media(max-width:900px){.view-control{margin-left:auto}.view-control select{font-size:16px}.zoom-control{margin-left:0}}
+@media(max-width:900px){.zoom-control{display:flex}.view-control{margin-left:0}}
